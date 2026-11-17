@@ -1,0 +1,45 @@
+name: App Studio
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  app-studio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # To test a build made here, build it in this step and add build-path below.
+
+      - name: Run App Studio suite
+        uses: ARYANK-08/mozark-run@v1
+        with:
+          mozark-token: ${{ secrets.MOZARK_TOKEN }}
+          api-url: 'https://app-studio-be.preprod.mozark.ai'
+          app-url: 'https://app-studio.preprod.mozark.ai'
+          org-id: '3862ef61-c163-4663-baa8-ac314d48976b'
+          app-id: '771e38ed-85c3-4420-abfa-4b8d103bab41'
+          project-id: 'e622fcca-fe55-4fa9-9f07-cbbc7d6b82c4'
+          suite-id: '01a1e49c-bf6c-7088-a8aa-14b4500c13ce'
+          app-version: ${{ github.ref_name }}
+
+      - name: Save results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-studio-results
+          path: results/
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v5
+        with:
+          report_paths: results/junit.xml
+          check_name: App Studio tests
